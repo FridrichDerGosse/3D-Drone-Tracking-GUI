@@ -13,6 +13,7 @@ from ..tools import Vec2, Vec3
 
 @dataclass(frozen=True)
 class CameraConfig:
+    id: int
     position: Vec3
     direction: Vec3
     fov: Vec2  # in rad

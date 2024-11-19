@@ -13,21 +13,21 @@ from ursina.color import rgb32
 from ursina import Sky
 import typing as tp
 
-from ..tools import Track
-from ..tools import Vec3
+from ..tools import CombinedResult, Vec3, AngularTrack, Track
 from ..camera import CameraConfig
 from ._camera import Camera
 from ._shapes import line
 
 
 class Viewer:
-    _cameras: list[Camera]
+    _cameras: dict[int, Camera]
 
     def __init__(
             self,
             cameras: tp.Iterable[CameraConfig],
     ) -> None:
-        self._cameras = []
+        self._cameras = {}
+        self._tracks: dict[int, Track] = {}
         self.ursina = Ursina()
         window.color = (0, 0, 0, 0)
 
@@ -45,7 +45,7 @@ class Viewer:
 
         # cameras
         for cam in cameras:
-            self._cameras.append(Camera(cam))
+            self._cameras[cam.id] = Camera(cam)
 
         line(Vec3(), Vec3.from_cartesian(1, 0, 0), color=rgb32(255, 0, 0), thickness=3)
         line(Vec3(), Vec3.from_cartesian(0, 1, 0), color=rgb32(0, 255, 0), thickness=4)
@@ -56,9 +56,24 @@ class Viewer:
     def step(self) -> None:
         self.ursina.step()
 
-    def update_tracks(self, tracks: tuple[tp.Iterable[Track], ...]) -> None:
+    def update_tracks(self, tracks: tp.Iterable[CombinedResult]) -> None:
         """
         :param tracks: structure: ([tracks per camera], [tracks per other camera])
         """
-        for i, cam_tracks in enumerate(tracks):
-            self._cameras[i].update_tracks(cam_tracks)
+        # sort all camera tracks to each camera
+        cam_results: dict[int, list[AngularTrack]] = {cid: [] for cid in self._cameras}
+        for i, track in enumerate(tracks):
+            for cam_angle in track.camera_angles:
+                cam_results[cam_angle.cam_id].append(cam_angle)
+
+            # update 3d tracks
+            tid = track.track_update.track_id
+            if tid in self._tracks:
+                self._tracks[tid].update_track(
+                    track.track_update.pos,
+                    track.track_update.track_type
+                )
+
+        # update cameras
+        for cid, angles in cam_results.items():
+            self._cameras[cid].update_tracks(angles)

@@ -12,14 +12,15 @@ from ursina.shaders import lit_with_shadows_shader
 import typing as tp
 import math as m
 
+from ..tools import AngularTrack, Vec3
 from ..camera import CameraConfig
-from ..tools import Track, Vec3
 from ._shapes import line
 
 
 class Camera(Entity):
     distance: int = 10
     _last_track_entities: list[Entity]
+    _id: int
 
     def __init__(self, config: CameraConfig, scale: float = 1) -> None:
         self._config = config
@@ -81,25 +82,30 @@ class Camera(Entity):
     def config(self) -> CameraConfig:
         return self._config
 
-    def update_tracks(self, tracks: tp.Iterable[Track]) -> None:
+    @property
+    def id(self) -> int:
+        return self._config.id
+
+    def update_tracks(self, tracks: tp.Iterable[AngularTrack]) -> None:
         # delete old entities
         for e in self._last_track_entities:
             destroy(e)
 
         # assign to temporary variables for better readability
-        px, py = self.config.resolution.xy
-        fx, fy = self.config.fov.xy
+        # px, py = self.config.resolution.xy
+        # fx, fy = self.config.fov.xy
 
         for track in tracks:
-            x, y = track.last_box.center.xy
-
-            # cast to 3d direction
-            angle_xy = -((x - px / 2) / px) * fx
-            angle_xz = -((y - py / 2) / py) * fy
-
-            trace = Vec3.from_polar(angle_xy, angle_xz, 1)
-            trace.angle_xz += self.config.direction.angle_xz
-            trace.angle_xy += self.config.direction.angle_xy
+            # x, y = track.last_box.center.xy
+            #
+            # # cast to 3d direction
+            # angle_xy = -((x - px / 2) / px) * fx
+            # angle_xz = -((y - py / 2) / py) * fy
+            #
+            # trace = Vec3.from_polar(angle_xy, angle_xz, 1)
+            # trace.angle_xz += self.config.direction.angle_xz
+            # trace.angle_xy += self.config.direction.angle_xy
+            trace = self.config.direction + track.direction
             trace.length = self.distance * 2
 
             self._last_track_entities.append(
