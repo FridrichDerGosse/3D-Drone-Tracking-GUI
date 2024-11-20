@@ -47,13 +47,19 @@ while True:
     i += 1
     v.step()
 
+    cam_results = [
+        AngularTrack(0, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
+        AngularTrack(1, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
+        AngularTrack(2, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
+    ]
+
     track = CombinedResult(
-        [
-            AngularTrack(0, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
-            AngularTrack(1, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
-            AngularTrack(2, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
-        ],
-        TrackUpdate(0, Vec3(), 1)
+        cam_results,
+        TrackUpdate(
+            track_id=0,
+            pos=Vec3(),
+            track_type=1
+        )
     )
     v.update_tracks([track])
 

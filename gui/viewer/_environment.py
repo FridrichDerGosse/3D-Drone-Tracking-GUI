@@ -16,6 +16,7 @@ import typing as tp
 from ..tools import CombinedResult, Vec3, AngularTrack, Track
 from ..camera import CameraConfig
 from ._camera import Camera
+from ._track import Track3D
 from ._shapes import line
 
 
@@ -27,7 +28,7 @@ class Viewer:
             cameras: tp.Iterable[CameraConfig],
     ) -> None:
         self._cameras = {}
-        self._tracks: dict[int, Track] = {}
+        self._tracks: dict[int, Track3D] = {}
         self.ursina = Ursina()
         window.color = (0, 0, 0, 0)
 
@@ -35,7 +36,8 @@ class Viewer:
         Entity(
             model='plane',
             scale=50,
-            color=rgb32(2, 179, 2),
+            # color=rgb32(2, 179, 2),
+            color=rgb32(100, 140, 111),
             shader=lit_with_shadows_shader,
             position=(0, 0, -.2)
         )
@@ -68,11 +70,19 @@ class Viewer:
 
             # update 3d tracks
             tid = track.track_update.track_id
-            if tid in self._tracks:
-                self._tracks[tid].update_track(
-                    track.track_update.pos,
-                    track.track_update.track_type
+            if tid not in self._tracks:
+                self._tracks[tid] = Track3D(
+                    Track(
+                        tid,
+                        track.track_update.pos,
+                        track.track_update.track_type
+                    )
                 )
+
+            self._tracks[tid].update_track(
+                track.track_update.pos,
+                track.track_update.track_type
+            )
 
         # update cameras
         for cid, angles in cam_results.items():
