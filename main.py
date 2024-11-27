@@ -1,67 +1,53 @@
 """
 main.py
-14. November 2024
+26. November 2024
 
-<description>
+GUI entry point
 
 Author:
 Nilusink
 """
-from gui.tools import Vec2, Vec3, CombinedResult, AngularTrack, TrackUpdate
-from gui.camera import CameraConfig
-from gui.viewer import Viewer
-import math as m
+from concurrent.futures import ThreadPoolExecutor
+from icecream import ic
+from time import perf_counter
+from gui import *
 
 
-# initial configuration for demo (will be automated)
-CAMERAS = [
-    CameraConfig(
-        id=0,
-        position=Vec3.from_polar(0, .02, 10),# + Vec3.from_cartesian(0, 0, .3),
-        direction=-Vec3.from_polar(0, -.1, 10),
-        fov=Vec2.from_cartesian(.88888888, .5),
-        resolution=Vec2.from_cartesian(1920, 1080)
-    ),
-    CameraConfig(
-        id=1,
-        position=Vec3.from_polar((2*m.pi) / 3, .02, 10),# + Vec3.from_cartesian(0, 0, .3),
-        direction=-Vec3.from_polar((2*m.pi) / 3, -.1, 10),
-        fov=Vec2.from_cartesian(.88888888, .5),
-        resolution=Vec2.from_cartesian(1920, 1080)
-    ),
-    CameraConfig(
-        id=2,
-        position=Vec3.from_polar((4*m.pi) / 3, .02, 10),#+ Vec3.from_cartesian(0, 0, .3),
-        direction=-Vec3.from_polar((4*m.pi) / 3, -.1, 10),
-        fov=Vec2.from_cartesian(.88888888, .5),
-        resolution=Vec2.from_cartesian(1920, 1080)
+SERVER_ADDRESS: tuple[str, int] = ("127.0.0.1", 20_000)
+
+
+def main() -> None:
+    # debugging setup
+    start = perf_counter()
+
+    def time_since_start() -> str:
+        """
+        stylized time since game start
+        gamestart being time since `mainloop` was called
+        """
+        t_ms = round(perf_counter() - start, 4)
+
+        t1, t2 = str(t_ms).split(".")
+        return f"{t1: >4}.{t2: <4} |> "
+
+    ic.configureOutput(prefix=time_since_start)
+    debugger.init("./tracking.log", write_debug=False, debug_level=DebugLevel.info)
+
+    pool = ThreadPoolExecutor()
+
+    v = Viewer([], pool)
+
+    dc = DataClient(
+        SERVER_ADDRESS,
+        pool,
+        v
     )
-]
+
+    dc.start()
+
+    while True:
+        v.step()
 
 
-v = Viewer(cameras=CAMERAS)
-
-# demo
-i = 0
-while True:
-    i += 1
-    v.step()
-
-    cam_results = [
-        AngularTrack(0, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
-        AngularTrack(1, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
-        AngularTrack(2, Vec3.from_polar((500 -i) / 800, i / 1000, 1)),
-    ]
-
-    track = CombinedResult(
-        cam_results,
-        TrackUpdate(
-            track_id=0,
-            pos=Vec3(),
-            track_type=1
-        )
-    )
-    v.update_tracks([track])
-
-    if i > 1500:
-        i = 0
+if __name__ == '__main__':
+    main()

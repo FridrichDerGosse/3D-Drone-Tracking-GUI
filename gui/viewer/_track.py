@@ -10,7 +10,8 @@ Nilusink
 from ursina import Entity, Vec3 as UVec3
 from ursina.color import rgb32, Color
 
-from ..tools import Track, Vec3
+from ..tools import Track, Vec3, debugger
+from ._shapes import line
 
 
 TRACK_TYPE_COLORMAP: dict[int, Color] = {
@@ -34,12 +35,22 @@ class Track3D(Entity):
         # proper position (y and z flipped)
         self.position = track.position
 
+        debugger.info(f"New Track: {track.id}")
+
     def update_track(
             self,
             pos: Vec3,
             track_type: int | None = None
     ) -> None:
         self._track.update_track(pos, track_type)
+
+        line(
+            self._track.position,
+            self._track.position_history[-2],
+            color=TRACK_TYPE_COLORMAP[self._track.track_type]
+        )
+
+        debugger.log(f"Track {self._track.id} updated")
 
     @property
     def position(self) -> Vec3:
