@@ -118,7 +118,7 @@ class Camera(Entity):
         # closing lines
         self._lines.append(line(l1, l2, l4, l3, close=True))
 
-    # @run_with_debug(show_finish=True, reraise_errors=True)
+    @run_with_debug(show_finish=True, reraise_errors=True)
     def update_tracks(self, tracks: tp.Iterable[AngularTrack]) -> None:
         debugger.trace(f"updating camera tracks: {len(tracks)}")
         # delete old entities

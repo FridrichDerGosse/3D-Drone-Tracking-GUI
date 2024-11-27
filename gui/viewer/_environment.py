@@ -14,7 +14,7 @@ from ursina.color import rgb32
 from ursina import Sky
 import typing as tp
 
-from ..tools import Vec3, AngularTrack, Track, Vec2, debugger, SimpleLock
+from ..tools import Vec3, AngularTrack, Track, Vec2, debugger, SimpleLock, run_with_debug
 from ..tools.comms import TRes3Data, SInfData, CamAngle3
 from ..camera import CameraConfig
 from ._camera import Camera
@@ -87,7 +87,7 @@ class Viewer:
         # if camera does exist, update it
         self._cameras[cam.id].update(cconfig)
 
-    # @run_with_debug(show_args=True)
+    @run_with_debug(show_args=True)
     def update_track(self, track: TRes3Data) -> None:
         """
         update a 3d track

@@ -54,7 +54,7 @@ class Track3D(Entity):
 
     @property
     def position(self) -> Vec3:
-        p = self.position
+        p = self._config.position
         return Vec3.from_cartesian(p.x, p.z, p.y)
 
     @position.setter
