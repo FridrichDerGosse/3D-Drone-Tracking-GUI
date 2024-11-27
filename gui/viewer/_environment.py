@@ -87,7 +87,7 @@ class Viewer:
         # if camera does exist, update it
         self._cameras[cam.id].update(cconfig)
 
-    @run_with_debug(show_args=True)
+    # @run_with_debug(show_args=True)
     def update_track(self, track: TRes3Data) -> None:
         """
         update a 3d track
@@ -104,12 +104,14 @@ class Viewer:
                 Track(
                     tid,
                     Vec3.from_cartesian(*track.position),
+                    track.accuracy,
                     track.track_type
                 )
             )
 
         self._tracks[tid].update_track(
             Vec3.from_cartesian(*track.position),
+            track.accuracy,
             track.track_type
         )
 

@@ -7,10 +7,10 @@ _track.py
 Author:
 Nilusink
 """
-from ursina import Entity, Vec3 as UVec3
-from ursina.color import rgb32, Color
+from ursina import Entity, Vec3 as UVec3, destroy
+from ursina.color import rgb32, Color, rgba32
 
-from ..tools import Track, Vec3, debugger
+from ..tools import Track, Vec3, debugger, run_with_debug
 from ._shapes import line
 
 
@@ -22,8 +22,12 @@ TRACK_TYPE_COLORMAP: dict[int, Color] = {
 
 
 class Track3D(Entity):
+    max_trace_length: int = 100
+
+    # @run_with_debug(reraise_errors=True)
     def __init__(self, track: Track) -> None:
         self._track = track
+        self._traces: list[Entity] = []
 
         super().__init__(
             model="sphere",
@@ -35,20 +39,38 @@ class Track3D(Entity):
         # proper position (y and z flipped)
         self.position = track.position
 
+        # accuracy ball
+        self._acc = Entity(
+            model="sphere",
+            position=self.get_position(),
+            scale=track.accuracy,
+            color=rgba32(50, 50, 50, 50)
+        )
+
         debugger.info(f"New Track: {track.id}")
 
+    # @run_with_debug(reraise_errors=True, show_finish=True)
     def update_track(
             self,
             pos: Vec3,
+            accuracy: float,
             track_type: int | None = None
     ) -> None:
-        self._track.update_track(pos, track_type)
+        self._track.update_track(pos, accuracy, track_type)
 
-        line(
+        self._traces.insert(0, line(
             self._track.position,
             self._track.position_history[-2],
             color=TRACK_TYPE_COLORMAP[self._track.track_type]
-        )
+        ))
+
+        while len(self._traces) > self.max_trace_length:
+            destroy(self._traces.pop(-1))
+
+        # update accuracy
+        debugger.log(f"updating accuracy: {accuracy}")
+        self._acc.scale = accuracy * 2
+        # self.scale = accuracy * 2
 
         debugger.log(f"Track {self._track.id} updated")
 
@@ -63,4 +85,5 @@ class Track3D(Entity):
 
     def update(self) -> None:
         self.position = self._track.position
+        self._acc.position = self.get_position()
         self.color_setter(TRACK_TYPE_COLORMAP[self._track.track_type])
